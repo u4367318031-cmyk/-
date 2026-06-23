@@ -1,202 +1,118 @@
+import os
 import logging
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
-from telegram.ext import (
-    Application,
-    CommandHandler,
-    CallbackQueryHandler,
-    ContextTypes,
-)
+from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
 
-TOKEN = "8456685562:AAEsQgQH5TSy8oA2mxgywC3HJBYh_vykv0U"
+TOKEN = os.getenv("8456685562:AAEsQgQH5TSy8oA2mxgywC3HJBYh_vykv0U")
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     level=logging.INFO
 )
 
-# Хранилище состояний игроков
 users = {}
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
-    users[user_id] = {
-        "wash": None,
-        "clothes": None,
-        "hair": None
-    }
+    users[user_id] = {"role": None}
 
     keyboard = [
-        [InlineKeyboardButton("Пенка", callback_data="wash_foam")],
-        [InlineKeyboardButton("Мыло, которым моет голову", callback_data="wash_soap")]
+        [InlineKeyboardButton("Я девушка", callback_data="role_girl")],
+        [InlineKeyboardButton("Я парень", callback_data="role_boy")]
     ]
 
     text = (
-        "💖 Добро пожаловать в мемную игру про идеальное свидание!\n\n"
-        "Главной героине нужно подготовиться к свиданию с Лупаменом.\n"
-        "Для начала выбери, чем ей умыться:"
+        "💘 Добро пожаловать в мемную игру «Найди парня или девушку»!\n\n"
+        "Сначала выбери, кто ты:"
     )
 
-    await update.message.reply_text(
-        text,
-        reply_markup=InlineKeyboardMarkup(keyboard)
-    )
+    await update.message.reply_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
 
 
 async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
-
     user_id = query.from_user.id
 
     if user_id not in users:
-        users[user_id] = {
-            "wash": None,
-            "clothes": None,
-            "hair": None
-        }
+        users[user_id] = {"role": None}
 
     data = query.data
 
-    # Шаг 1: умывание
-    if data == "wash_foam":
-        users[user_id]["wash"] = "foam"
-        text = (
-            "✨ Отличный выбор! Героиня умылась пенкой, кожа стала чистой и свежей.\n\n"
-            "Теперь выбери наряд:"
-        )
+    if data == "role_girl":
+        users[user_id]["role"] = "girl"
         keyboard = [
-            [InlineKeyboardButton("Скини-штаны", callback_data="clothes_skinny")],
-            [InlineKeyboardButton("Розовое платье с блёстками", callback_data="clothes_dress")]
+            [InlineKeyboardButton("Да, я такой 😎", callback_data="answer_boy_1")],
+            [InlineKeyboardButton("Ты тоже ничего 😏", callback_data="answer_boy_2")]
         ]
+        text = (
+            "🌳 Ты гуляешь по парку и встречаешь будущую любовь.\n\n"
+            "Перед тобой парень. Он говорит:\n"
+            "«Ты такая интересная девушка...» 😍\n\n"
+            "Что ответишь?"
+        )
         await query.message.edit_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
         return
 
-    elif data == "wash_soap":
-        users[user_id]["wash"] = "soap"
-        text = (
-            "🫧 Ой... героиня умылась мылом не по назначению, и на лице появились прыщики.\n\n"
-            "Теперь выбери наряд:"
-        )
+    if data == "role_boy":
+        users[user_id]["role"] = "boy"
         keyboard = [
-            [InlineKeyboardButton("Скини-штаны", callback_data="clothes_skinny")],
-            [InlineKeyboardButton("Розовое платье с блёстками", callback_data="clothes_dress")]
+            [InlineKeyboardButton("Ты чего такое говоришь? 😳", callback_data="answer_girl_1")],
+            [InlineKeyboardButton("Ну и странное знакомство... 🙃", callback_data="answer_girl_2")]
         ]
+        text = (
+            "🌳 Ты гуляешь по парку и встречаешь будущую любовь.\n\n"
+            "Перед тобой девушка. Она говорит:\n"
+            "«Какой ты красивый мужчина!» 😍\n\n"
+            "Что ответишь?"
+        )
         await query.message.edit_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
         return
 
-    # Шаг 2: одежда
-    elif data == "clothes_skinny":
-        users[user_id]["clothes"] = "skinny"
+    if data in ["answer_boy_1", "answer_boy_2"]:
         text = (
-            "👖 Выбраны скини-штаны.\n\n"
-            "Теперь выбери причёску:"
+            "😱 Внезапно парень начинает странно светиться...\n\n"
+            "Он превращается в Лупа-Залупу!\n"
+            "Ты не успеваешь убежать, и он утаскивает тебя в мем-вселенную.\n\n"
+            "🌀 Концовка: тебя забрал мем!"
         )
-        keyboard = [
-            [InlineKeyboardButton("Распущенные волосы с локонами", callback_data="hair_curls")],
-            [InlineKeyboardButton("Сальный пучок", callback_data="hair_bun")]
-        ]
+        keyboard = [[InlineKeyboardButton("Играть заново", callback_data="restart")]]
         await query.message.edit_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
         return
 
-    elif data == "clothes_dress":
-        users[user_id]["clothes"] = "dress"
+    if data in ["answer_girl_1", "answer_girl_2"]:
         text = (
-            "👗 Выбрано красивое розовое платье с блёстками!\n\n"
-            "Теперь выбери причёску:"
+            "😱 Внезапно девушка начинает странно светиться...\n\n"
+            "Она превращается в Лупамена!\n"
+            "Ты не успеваешь опомниться, и Лупамен утаскивает тебя в мем-вселенную.\n\n"
+            "🌀 Концовка: тебя забрал мем!"
         )
-        keyboard = [
-            [InlineKeyboardButton("Распущенные волосы с локонами", callback_data="hair_curls")],
-            [InlineKeyboardButton("Сальный пучок", callback_data="hair_bun")]
-        ]
+        keyboard = [[InlineKeyboardButton("Играть заново", callback_data="restart")]]
         await query.message.edit_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
         return
 
-    # Шаг 3: причёска и финал
-    elif data == "hair_curls":
-        users[user_id]["hair"] = "curls"
-        await show_result(query, user_id)
+    if data == "restart":
+        users[user_id] = {"role": None}
+        keyboard = [
+            [InlineKeyboardButton("Я девушка", callback_data="role_girl")],
+            [InlineKeyboardButton("Я парень", callback_data="role_boy")]
+        ]
+        text = (
+            "💘 Начинаем заново!\n\n"
+            "Выбери, кто ты:"
+        )
+        await query.message.edit_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
         return
-
-    elif data == "hair_bun":
-        users[user_id]["hair"] = "bun"
-        await show_result(query, user_id)
-        return
-
-
-async def show_result(query, user_id):
-    wash = users[user_id]["wash"]
-    clothes = users[user_id]["clothes"]
-    hair = users[user_id]["hair"]
-
-    # Идеальная концовка
-    if wash == "foam" and clothes == "dress" and hair == "curls":
-        text = (
-            "💘 Вы пришли на свидание с Лупаменом.\n\n"
-            "Он в восторге: кожа сияет, платье шикарное, локоны прекрасны.\n"
-            "Свидание прошло идеально!\n\n"
-            "Лупамен говорит:\n"
-            "«Ты выглядишь потрясающе... Давай встречаться?» 💍\n\n"
-            "🎉 Победа! Идеальное свидание удалось!"
-        )
-
-    # Специальная плохая концовка
-    elif wash == "soap" and clothes == "skinny" and hair == "bun":
-        text = (
-            "💔 Вы пришли на свидание с Лупаменом.\n\n"
-            "Он посмотрел на твой образ и сказал:\n"
-            "«Ну... сегодня ты выглядишь совсем не подготовленно к свиданию».\n\n"
-            "Свидание прошло неловко.\n"
-            "❌ Поражение!"
-        )
-
-    # Нейтральная концовка
-    else:
-        text = (
-            "💞 Вы пришли на свидание с Лупаменом.\n\n"
-            "Свидание прошло... неоднозначно. Некоторые детали образа получились удачно, "
-            "а некоторые — не очень.\n\n"
-            "Лупамен сказал:\n"
-            "«Ты интересная, но можно было подготовиться получше».\n\n"
-            "🔄 Это не идеальная концовка. Попробуй ещё раз и собери лучший образ!"
-        )
-
-    keyboard = [
-        [InlineKeyboardButton("Начать заново", callback_data="restart")]
-    ]
-
-    await query.message.edit_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
-
-
-async def restart_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-
-    user_id = query.from_user.id
-    users[user_id] = {
-        "wash": None,
-        "clothes": None,
-        "hair": None
-    }
-
-    keyboard = [
-        [InlineKeyboardButton("Пенка", callback_data="wash_foam")],
-        [InlineKeyboardButton("Мыло, которым моет голову", callback_data="wash_soap")]
-    ]
-
-    text = (
-        "💖 Начинаем заново!\n\n"
-        "Выбери, чем умыть главную героиню:"
-    )
-
-    await query.message.edit_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
 
 
 def main():
+    if not TOKEN:
+        raise ValueError("Не найден BOT_TOKEN в переменных окружения")
+
     app = Application.builder().token(TOKEN).build()
 
     app.add_handler(CommandHandler("start", start))
-    app.add_handler(CallbackQueryHandler(restart_handler, pattern="^restart$"))
     app.add_handler(CallbackQueryHandler(button_handler))
 
     print("Бот запущен...")
