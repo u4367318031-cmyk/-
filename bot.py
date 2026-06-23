@@ -3,7 +3,7 @@ import logging
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
 
-TOKEN = os.getenv("8456685562:AAEsQgQH5TSy8oA2mxgywC3HJBYh_vykv0U")
+TOKEN = os.getenv("BOT_TOKEN")
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
